@@ -39,6 +39,8 @@ class NasaDailyImage
 		frame.setVisible(true);
 		panel.setLayout(null);
 		panel.setOpaque(true);
+		panel.setFocusable(true);
+		panel.requestFocusInWindow();
 	
 		index=0;
 
@@ -50,6 +52,27 @@ class NasaDailyImage
 		{
 			e.printStackTrace();
 		}
+
+		panel.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e)
+			{
+				if(e.getKeyCode()==KeyEvent.VK_LEFT)
+				{
+					if(index!=0)
+						index--;
+				}
+				else if(e.getKeyCode()==KeyEvent.VK_RIGHT)
+				{
+					if(index!=nlist.getLength())
+						index++;
+				}
+				else
+				{
+
+				}
+				nextFeed();
+			}
+		});
 	}
 
 	public void getFeed()
