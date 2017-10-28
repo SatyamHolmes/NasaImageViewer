@@ -11,49 +11,55 @@ import javax.imageio.*;
 
 class NasaDailyImage
 {
-	private final String feedurl="http://www.nasa.gov/rss/dyn/image_of_the_day.rss";
-	private final int cachelimit=5;
-	private int cachenum;
+	private final String feedurl="https://www.nasa.gov/rss/dyn/image_of_the_day.rss";
+	private static final int cachelimit=5;
+
 	private JFrame frame;
 	private ImagePanel panel;
 	private JTextArea des;
-	private ArrayList<String> title;
-	private ArrayList<String> date;
-	private ArrayList<String> description;
+	private Store<Item> item;
 	private  URL url=null;
-	private ArrayList<Image> image;
 	private NodeList nlist;
+	private Image backImage=null;
+
 	private int index;
-	private static boolean start;
+	private int clip;
+	private boolean reqimage;
 
 	public static void main(String[] arg)
 	{
 		NasaDailyImage work=new NasaDailyImage();
 		work.getFeed();
-		work.parseFeed();
 		
+		for(work.index=work.index; work.index<cachelimit; work.index++)
+		{
+			work.item.addFront(work.parseFeed(work.index));
+		System.out.println(work.item.size());
+
+			if(work.index==0)
+			{
+				work.item.removeLast();
+				work.des.setText("\n"+work.item.get(work.clip).description+"\n\nPress DOWN direction key to download");	
+				work.panel.repaint();
+			}
+		}
+
 	}
 
 	public NasaDailyImage()
 	{
+		try
+		{
 		index=0;
-		cachenum=0;
-		start=false;
+		clip=1;
 
-		title=new ArrayList<String>();
-		date=new ArrayList<String>();
-		description=new ArrayList<String>();
-		image=new ArrayList<Image>();
-
-		title.add("Title");
-		date.add("Date");
-		description.add("Welcome user. You are about to view some awesome images from NASA. Press LEFT and RIGHT direction key of keyboard to navigate and DOWN direction key to download the image that touches your heart.");
-		image.add(new ImageIcon("../fill.jpg").getImage());
+		item=new Store<Item>();
+		item.addFront(new Item("Title", "Date", new ImageIcon("../fill.jpg").getImage(), "Welcome user. You are about to view some awesome images from NASA. Press LEFT and RIGHT direction key of keyboard to navigate and DOWN direction key to download the image that touches your heart."));
+		backImage=new ImageIcon("../semiback.png").getImage();
 
 		frame=new JFrame();
 		des=new JTextArea();
 		panel=new ImagePanel();
-
 		frame.setSize(1000,700);
 		frame.getContentPane().add(panel);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,58 +76,103 @@ class NasaDailyImage
 		des.setLineWrap(true);
 		des.setWrapStyleWord(true);
 		des.setForeground(Color.WHITE);
-		des.setText("\n"+description.get(index));	
+		des.setText("\n"+item.get(clip).description);	
 
+		url=new URL(feedurl);
 
-		try
-		{
-			url=new URL(feedurl);
-
-			panel.addKeyListener(new KeyAdapter(){
-				public void keyPressed(KeyEvent e)
+		panel.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e)
+			{
+				if(e.getKeyCode()==KeyEvent.VK_LEFT)
 				{
-					
-					if(e.getKeyCode()==KeyEvent.VK_LEFT)
+					if(index!=0 && clip!=1)
 					{
-						if(index!=0 && index!=1)
-							index--;
-					}
-					else if(e.getKeyCode()==KeyEvent.VK_RIGHT)
-					{
-						if(index!=nlist.getLength() && index!=0 && image.size()!=(index+1))
+						System.out.println(clip);
+						clip--;
+						des.setText("\n"+item.get(clip).description+"\n\nPress DOWN direction key to download");	
+
+						/*if(clip==1 && index>4 && !reqimage)
 						{
-							index++;
-							des.setText("\n"+description.get(index)+"\n\nPress DOWN direction key to download");	
-							if(cachenum==cachelimit)
-							{
-								cachenum=0;
-								//	notify();
-							}
+		System.out.println(item.size()+" "+index);
+
+							Thread t=new Thread(new Runnable(){
+								public void run()
+								{
+									item.removeFront();
+									item.addLast(parseFeed(index-5));
+									clip++;
+		System.out.println(item.size());
+
+								}
+							});
+							t.start();
+						}*/
+					}
+					else
+					{
+						if(index==0)
+							des.append("\n\nThat's over for today. Come tommorrow for more");
+						else
+							des.append("\n\nSlow internet ehh..Please wait.. Loading the awesome image...");
+					}
+					
+				}
+				else if(e.getKeyCode()==KeyEvent.VK_RIGHT)
+				{
+					if(index!=nlist.getLength()-1 && index!=0 && item.size()!=clip)
+					{
+						clip++;
+						des.setText("\n"+item.get(clip).description+"\n\nPress DOWN direction key to download");	
+						
+						if(clip==5 && !reqimage)
+						{
+		System.out.println(item.size());
+
+							Thread t=new Thread(new Runnable(){
+								public void run()
+								{
+									index++;
+									item.removeLast();
+									clip--;
+									item.addFront(parseFeed(index));
+		System.out.println(item.size());
+								
+								}
+							});
+							t.start();
+						}
+					}
+					else
+					{
+						if(index==nlist.getLength())
+						{
+							des.append("\n\nThat's over for today. Come tommorrow for more");
 						}
 						else
 						{
-							if(index==nlist.getLength())
-							{
-								des.append("\n\nThat's over for today. Come tommorrow for more");
-							}
-							else
-							{
-								des.append("\n\nSlow internet ehh..Please wait.. Loading the awesome image...");
-							}
+							des.append("\n\nSlow internet ehh..Please wait.. Loading the awesome image...");
 						}
 					}
-					else if(e.getKeyCode()==KeyEvent.VK_DOWN)
+											}
+				else if(e.getKeyCode()==KeyEvent.VK_DOWN)
+				{
+					try
 					{
-				
+						//ImageIO.write(ImageIO.read(item.get(clip).image),"JPEG",new File("NasaImage.jpg"));
 					}
-					panel.repaint();
+					catch(Exception ex)
+					{
+
+					}
 				}
-			});
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
+						panel.repaint();
+
+			}
+		});
+	}
+	catch(Exception e){
+		e.printStackTrace();
+	}
 	}
 
 	public void getFeed()
@@ -133,67 +184,59 @@ class NasaDailyImage
 			des.append("\nParsing the feed...");
 			DocumentBuilderFactory dfac=DocumentBuilderFactory.newInstance();
 			DocumentBuilder dbuild=dfac.newDocumentBuilder();
-			Document doc=dbuild.parse(s);
+			Document doc=dbuild.parse(new File("../trash.xml"));
 			doc.getDocumentElement().normalize();
 			nlist=doc.getElementsByTagName("item");
 			des.append("\nGetting the awesome image...");
 		}
 		catch(Exception e)
 		{
-			des.append("\nNo internet connection");
+			des.append("\nNo internet connection!!");
 		}
 	}
 
-	public void parseFeed()
+	synchronized public Item parseFeed(int i)
 	{
 		Element em;
-		for(int i=0;i<nlist.getLength();i++)
-		{
 			try
 			{
-				if(cachenum==cachelimit)
-				{
-				//	wait();
-				}
+			System.out.println("reading");
 
+				reqimage=true;
 				em=(Element)nlist.item(i);
-				title.add(em.getElementsByTagName("title").item(0).getTextContent());
-				date.add(em.getElementsByTagName("pubDate").item(0).getTextContent());
-				
 				StringBuffer str=new StringBuffer(((Element)em.getElementsByTagName("enclosure").item(0)).getAttribute("url"));
 				str.insert(4,'s');
-				image.add(ImageIO.read(new URL(new String(str))));
-				
-				description.add(em.getElementsByTagName("description").item(0).getTextContent());
-				
-				if(index==0)
-				{
-					index++;
-					des.setText("\n"+description.get(index)+"\n\nPress DOWN direction key to download");	
-					panel.repaint();
-				}
+				reqimage=false;
+				return new Item(em.getElementsByTagName("title").item(0).getTextContent(),em.getElementsByTagName("pubDate").item(0).getTextContent(),new ImageIcon(ImageIO.read(new URL(new String(str)))).getImage(),em.getElementsByTagName("description").item(0).getTextContent());
 
-				cachenum++;
 			}
 			catch(Exception e)
 			{
 				e.printStackTrace();
+				return null;
 			}
-		}
+		
 	}
 
 	class ImagePanel extends JPanel
 	{
 		public void paintComponent(Graphics g)
 		{
-				g.drawImage(new ImageIcon(image.get(index)).getImage(),0,0,1000,700,this);
-				g.drawImage(new ImageIcon("../semiback.png").getImage(),0,0,1000,700,this);
+			try
+			{
+				g.drawImage(item.get(clip).image,0,0,1000,700,this);
+				g.drawImage(backImage,0,0,1000,700,this);
 				g.setColor(Color.WHITE);
 				g.setFont(new Font("TimesRoman",Font.BOLD,25));
-				g.drawString(title.get(index),250,30);
+				g.drawString(item.get(clip).title,250-(7*(item.get(clip).title.length()-32)),30);
 				g.setFont(new Font("TimesRoman",Font.ITALIC,15));
-				g.drawString(date.get(index),700,55);
-				g.drawImage(new ImageIcon(image.get(index)).getImage(),10,80,980,460,this);
+				g.drawString(item.get(clip).date,700,55);
+				g.drawImage(item.get(clip).image,10,80,980,460,this);
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 	}
 }
