@@ -20,7 +20,7 @@ class NasaDailyImage
 	private Store<Item> item;
 	private  URL url=null;
 	private NodeList nlist;
-	private Image backImage=null;
+	private BufferedImage backImage=null;
 
 	private int index;
 	private int clip;
@@ -54,8 +54,8 @@ class NasaDailyImage
 		clip=1;
 
 		item=new Store<Item>();
-		item.addFront(new Item("Title", "Date", new ImageIcon("../fill.jpg").getImage(), "Welcome user. You are about to view some awesome images from NASA. Press LEFT and RIGHT direction key of keyboard to navigate and DOWN direction key to download the image that touches your heart."));
-		backImage=new ImageIcon("../semiback.png").getImage();
+		item.addFront(new Item("Title", "Date", ImageIO.read(new File("../fill.jpg")), "Welcome user. You are about to view some awesome images from NASA. Press LEFT and RIGHT direction key of keyboard to navigate and DOWN direction key to download the image that touches your heart."));
+		backImage=ImageIO.read(new File("../semiback.png"));
 
 		frame=new JFrame();
 		des=new JTextArea();
@@ -90,7 +90,8 @@ class NasaDailyImage
 						System.out.println(clip);
 						clip--;
 						des.setText("\n"+item.get(clip).description+"\n\nPress DOWN direction key to download");	
-
+						panel.repaint();
+						
 						/*if(clip==1 && index>4 && !reqimage)
 						{
 		System.out.println(item.size()+" "+index);
@@ -123,7 +124,7 @@ class NasaDailyImage
 					{
 						clip++;
 						des.setText("\n"+item.get(clip).description+"\n\nPress DOWN direction key to download");	
-						
+						panel.repaint();
 						if(clip==5 && !reqimage)
 						{
 		System.out.println(item.size());
@@ -158,14 +159,16 @@ class NasaDailyImage
 				{
 					try
 					{
-						//ImageIO.write(ImageIO.read(item.get(clip).image),"JPEG",new File("NasaImage.jpg"));
+						ImageIO.write(item.get(clip).image,"JPG",new File(item.get(clip).title+"jpg"));
+						des.append("\nImage Downloaded");
+
 					}
 					catch(Exception ex)
 					{
 
 					}
 				}
-						panel.repaint();
+						
 
 			}
 		});
@@ -184,7 +187,7 @@ class NasaDailyImage
 			des.append("\nParsing the feed...");
 			DocumentBuilderFactory dfac=DocumentBuilderFactory.newInstance();
 			DocumentBuilder dbuild=dfac.newDocumentBuilder();
-			Document doc=dbuild.parse(new File("../trash.xml"));
+			Document doc=dbuild.parse(s);
 			doc.getDocumentElement().normalize();
 			nlist=doc.getElementsByTagName("item");
 			des.append("\nGetting the awesome image...");
@@ -207,7 +210,7 @@ class NasaDailyImage
 				StringBuffer str=new StringBuffer(((Element)em.getElementsByTagName("enclosure").item(0)).getAttribute("url"));
 				str.insert(4,'s');
 				reqimage=false;
-				return new Item(em.getElementsByTagName("title").item(0).getTextContent(),em.getElementsByTagName("pubDate").item(0).getTextContent(),new ImageIcon(ImageIO.read(new URL(new String(str)))).getImage(),em.getElementsByTagName("description").item(0).getTextContent());
+				return new Item(em.getElementsByTagName("title").item(0).getTextContent(),em.getElementsByTagName("pubDate").item(0).getTextContent(),ImageIO.read(new URL(new String(str))),em.getElementsByTagName("description").item(0).getTextContent());
 
 			}
 			catch(Exception e)
@@ -232,6 +235,7 @@ class NasaDailyImage
 				g.setFont(new Font("TimesRoman",Font.ITALIC,15));
 				g.drawString(item.get(clip).date,700,55);
 				g.drawImage(item.get(clip).image,10,80,980,460,this);
+				Toolkit.getDefaultToolkit().sync();
 			}
 			catch(Exception ex)
 			{
