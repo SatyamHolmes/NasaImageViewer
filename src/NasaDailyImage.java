@@ -21,7 +21,6 @@ class NasaDailyImage
 	private  URL url=null;
 	private NodeList nlist;
 	private BufferedImage backImage=null;
-
 	private int index;
 	private int clip;
 	private boolean reqimage;
@@ -93,6 +92,8 @@ class NasaDailyImage
 						panel.repaint();
 						
 						/*if(clip==1 && index>4 && !reqimage)
+
+						if(clip==1 && index>4 && !reqimage)
 						{
 		System.out.println(item.size()+" "+index);
 
@@ -108,6 +109,7 @@ class NasaDailyImage
 							});
 							t.start();
 						}*/
+						
 					}
 					else
 					{
@@ -161,14 +163,12 @@ class NasaDailyImage
 					{
 						ImageIO.write(item.get(clip).image,"JPG",new File(item.get(clip).title+"jpg"));
 						des.append("\nImage Downloaded");
-
 					}
 					catch(Exception ex)
 					{
 
 					}
 				}
-						
 
 			}
 		});
@@ -211,7 +211,6 @@ class NasaDailyImage
 				str.insert(4,'s');
 				reqimage=false;
 				return new Item(em.getElementsByTagName("title").item(0).getTextContent(),em.getElementsByTagName("pubDate").item(0).getTextContent(),ImageIO.read(new URL(new String(str))),em.getElementsByTagName("description").item(0).getTextContent());
-
 			}
 			catch(Exception e)
 			{
