@@ -1,12 +1,15 @@
 import java.awt.*;
+import java.awt.image.*;
+
+
 class Item
 {
 	public String title;
 	public String date;
-	public Image image;
+	public BufferedImage image;
 	public String description;
 
-	public Item(String title,String date,Image image,String description)
+	public Item(String title,String date,BufferedImage image,String description)
 	{
 		this.title=title;
 		this.date=date;
